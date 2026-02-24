@@ -14,14 +14,9 @@ import { MailService } from './mail.service';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        privateKey: config.get<string>('JWT_PRIVATE_KEY'),
-        publicKey: config.get<string>('JWT_PUBLIC_KEY'),
+        secret: config.get<string>('JWT_SECRET'),
         signOptions: {
-          algorithm: 'RS256' as const,
           expiresIn: config.get<string>('JWT_ACCESS_EXPIRY', '15m'),
-        },
-        verifyOptions: {
-          algorithms: ['RS256' as const],
         },
       }),
     }),
