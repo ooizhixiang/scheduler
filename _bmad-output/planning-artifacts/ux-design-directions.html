@@ -1,0 +1,2381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCHEDULER — Design Direction Showcase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --coral: #f56447;
+      --coral-hover: #e04f33;
+      --coral-subtle: #fef0ee;
+      --surface: #FFFFFF;
+      --surface-secondary: #F8F8FA;
+      --text-primary: #1A1A2E;
+      --text-secondary: #5C5C72;
+      --text-muted: #9494A8;
+      --border: #E4E4EC;
+      --success: #16A34A;
+      --warning: #D97706;
+      --error: #DC2626;
+      --info: #2563EB;
+      --role-ocean: #2563EB;
+      --role-forest: #16A34A;
+      --role-violet: #7C3AED;
+      --role-amber: #D97706;
+      --role-teal: #0D9488;
+      --role-rose: #E11D48;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F0F0F4;
+      color: var(--text-primary);
+    }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    .nav h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--coral);
+      white-space: nowrap;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      flex: 1;
+    }
+
+    .nav-tab {
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+
+    .nav-tab:hover {
+      background: var(--surface-secondary);
+    }
+
+    .nav-tab.active {
+      background: var(--coral);
+      color: white;
+    }
+
+    .nav-tab .num {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.1);
+      text-align: center;
+      line-height: 18px;
+      font-size: 11px;
+      margin-right: 6px;
+    }
+
+    .nav-tab.active .num {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Content */
+    .content {
+      margin-top: 60px;
+      padding: 24px;
+    }
+
+    .direction {
+      display: none;
+    }
+
+    .direction.active {
+      display: block;
+    }
+
+    .direction-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .direction-header h2 {
+      font-size: 30px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .direction-header p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .direction-header .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+
+    /* Section Panels */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: var(--surface);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .panel-label {
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-body {
+      padding: 0;
+    }
+
+    .panel.full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* ===== DIRECTION 1: CLEAN SLATE ===== */
+    .d1 .panel {
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      border: 1px solid #f0f0f4;
+    }
+
+    /* Employee Home - Clean */
+    .d1-employee {
+      padding: 24px;
+      background: var(--surface);
+    }
+
+    .d1-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .d1-header h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .d1-notif {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      background: var(--surface);
+    }
+
+    .d1-shift-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+      border-left: 4px solid var(--role-ocean);
+    }
+
+    .d1-shift-card .day {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .d1-shift-card .time {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .d1-shift-card .meta {
+      font-size: 14px;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .d1-shift-card .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #EBF2FF;
+      color: var(--role-ocean);
+    }
+
+    .d1-coworkers {
+      display: flex;
+      gap: -4px;
+      margin-top: 12px;
+    }
+
+    .d1-coworkers .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      border: 2px solid white;
+      margin-left: -4px;
+    }
+
+    .d1-coworkers .avatar:first-child {
+      margin-left: 0;
+    }
+
+    .d1-coworkers span {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: 8px;
+      align-self: center;
+    }
+
+    .d1-cta {
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      border: none;
+      background: var(--coral);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 8px;
+    }
+
+    .d1-cta:hover {
+      background: var(--coral-hover);
+    }
+
+    /* Clocked-in variant */
+    .d1-clocked .d1-shift-card {
+      border-left-color: var(--coral);
+      background: var(--coral-subtle);
+    }
+
+    .d1-clocked .clock-header {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--coral);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .d1-clocked .clock-header .check {
+      color: var(--success);
+    }
+
+    .d1-clockout {
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--text-secondary);
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    .d1-clockout:hover {
+      border-color: var(--text-secondary);
+      color: var(--text-primary);
+    }
+
+    /* ===== DIRECTION 2: BOLD SIGNAL ===== */
+    .d2 .panel {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      border: none;
+    }
+
+    .d2-employee {
+      padding: 24px;
+    }
+
+    .d2-shift-card {
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #fef0ee 0%, #fff 60%);
+      border: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .d2-shift-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      background: var(--role-ocean);
+    }
+
+    .d2-shift-card .day {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--coral);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .d2-shift-card .time {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .d2-shift-card .meta {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .d2-cta {
+      width: 100%;
+      padding: 18px;
+      border-radius: 12px;
+      border: none;
+      background: var(--coral);
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 12px rgba(245, 100, 71, 0.3);
+      transition: all 0.2s;
+    }
+
+    .d2-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(245, 100, 71, 0.4);
+    }
+
+    /* ===== DIRECTION 3: WARM TOUCH ===== */
+    .d3 .panel {
+      box-shadow: 0 2px 12px rgba(26, 26, 46, 0.04);
+      border: 1px solid #F0EDE8;
+      border-radius: 16px;
+    }
+
+    .d3-employee {
+      padding: 24px;
+      background: #FFFCFA;
+      border-radius: 16px;
+    }
+
+    .d3-greeting {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .d3-name {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .d3-shift-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid #F0EDE8;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(26, 26, 46, 0.03);
+    }
+
+    .d3-shift-card .day {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .d3-shift-card .time {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .d3-shift-card .meta {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .d3-shift-card .role-badge {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #EBF2FF;
+      color: var(--role-ocean);
+    }
+
+    .d3-coworkers {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #F0EDE8;
+    }
+
+    .d3-coworkers .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .d3-coworkers .label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .d3-cta {
+      width: 100%;
+      padding: 16px;
+      border-radius: 16px;
+      border: none;
+      background: var(--coral);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .d3-cta:hover {
+      background: var(--coral-hover);
+    }
+
+    /* ===== DIRECTION 4: DENSE GRID ===== */
+    .d4-builder {
+      padding: 12px;
+    }
+
+    .d4-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .d4-toolbar h3 {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .d4-toolbar .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .d4-toolbar .btn {
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: white;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--text-secondary);
+    }
+
+    .d4-toolbar .btn.primary {
+      background: var(--coral);
+      color: white;
+      border-color: var(--coral);
+    }
+
+    .d4-grid {
+      display: grid;
+      grid-template-columns: 100px repeat(7, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      font-size: 12px;
+    }
+
+    .d4-grid .header {
+      background: var(--surface-secondary);
+      padding: 8px 6px;
+      font-weight: 600;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .d4-grid .employee-name {
+      background: var(--surface);
+      padding: 6px 8px;
+      font-weight: 600;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .d4-grid .employee-name .mini-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .d4-grid .cell {
+      background: var(--surface);
+      padding: 4px;
+      min-height: 40px;
+      position: relative;
+    }
+
+    .d4-grid .cell.empty {
+      background: var(--surface);
+    }
+
+    .d4-grid .shift-block {
+      border-radius: 3px;
+      padding: 3px 6px;
+      font-size: 11px;
+      color: white;
+      font-weight: 500;
+      line-height: 1.3;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .d4-grid .shift-block .code {
+      font-weight: 700;
+      font-size: 10px;
+      opacity: 0.85;
+    }
+
+    /* Timetable (By Day continuous blocks) */
+    .d4-timetable {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .d4-timetable-inner {
+      min-width: 1200px;
+    }
+
+    .tt-header-row {
+      display: grid;
+      grid-template-columns: 48px repeat(7, 1fr);
+      background: var(--surface-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tt-header-row .tt-time-gutter {
+      border-right: 1px solid var(--border);
+    }
+
+    .tt-day-header {
+      padding: 8px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      color: var(--text-secondary);
+      border-right: 1px solid var(--border);
+    }
+
+    .tt-day-header:last-child {
+      border-right: none;
+    }
+
+    .tt-body {
+      display: grid;
+      grid-template-columns: 48px repeat(7, 1fr);
+      max-height: 528px;
+      overflow-y: auto;
+    }
+
+    .tt-body .tt-time-gutter {
+      position: relative;
+      border-right: 1px solid var(--border);
+      background: var(--surface-secondary);
+    }
+
+    .tt-time-label {
+      position: absolute;
+      right: 6px;
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1;
+      transform: translateY(-5px);
+    }
+
+    .tt-time-label:first-child {
+      transform: translateY(4px);
+    }
+
+    .tt-day-col {
+      position: relative;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      height: 768px;
+    }
+
+    .tt-day-col:last-child {
+      border-right: none;
+    }
+
+    .tt-day-col.tt-light {
+      background: #fafafa;
+    }
+
+    .tt-hour-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--border);
+      opacity: 0.5;
+    }
+
+    .tt-hour-line:first-child {
+      opacity: 0;
+    }
+
+    .tt-block {
+      position: absolute;
+      width: 52px;
+      border-radius: 3px;
+      padding: 4px 4px;
+      color: white;
+      font-size: 10px;
+      line-height: 1.2;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      z-index: 1;
+    }
+
+    .tt-block:hover {
+      opacity: 0.85 !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .tt-block .code {
+      font-weight: 700;
+      font-size: 9px;
+      opacity: 0.85;
+    }
+
+    .tt-block .name {
+      font-weight: 600;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .tt-block .time {
+      font-size: 9px;
+      opacity: 0.8;
+      margin-top: auto;
+    }
+
+    .tt-empty-add {
+      position: absolute;
+      padding: 8px 4px;
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+      cursor: pointer;
+      border: 1px dashed var(--border);
+      border-radius: 3px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tt-empty-add:hover {
+      background: var(--coral-subtle);
+      color: var(--coral);
+      border-color: var(--coral);
+    }
+
+    /* ===== DIRECTION 5: CARD FORWARD ===== */
+    .d5 .panel {
+      border: 2px solid var(--border);
+      box-shadow: none;
+    }
+
+    .d5-dashboard {
+      padding: 16px;
+    }
+
+    .d5-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .d5-stat {
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .d5-stat .number {
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .d5-stat .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .d5-stat.success {
+      border-color: var(--success);
+    }
+
+    .d5-stat.success .number {
+      color: var(--success);
+    }
+
+    .d5-stat.warning {
+      border-color: var(--warning);
+    }
+
+    .d5-stat.warning .number {
+      color: var(--warning);
+    }
+
+    .d5-stat.error {
+      border-color: var(--error);
+    }
+
+    .d5-stat.error .number {
+      color: var(--error);
+    }
+
+    .d5-team-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .d5-member {
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .d5-member:hover {
+      border-color: var(--coral);
+      background: var(--coral-subtle);
+    }
+
+    .d5-member .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .d5-member .status-ring {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      padding: 2px;
+      flex-shrink: 0;
+    }
+
+    .d5-member .status-ring.on-time {
+      border: 2px solid var(--success);
+    }
+
+    .d5-member .status-ring.late {
+      border: 2px solid var(--warning);
+    }
+
+    .d5-member .status-ring.missing {
+      border: 2px solid var(--error);
+    }
+
+    .d5-member .info {
+      flex: 1;
+    }
+
+    .d5-member .name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .d5-member .shift-time {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .d5-member .status-badge {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .d5-member .status-badge.on-time {
+      background: #ECFDF5;
+      color: var(--success);
+    }
+
+    .d5-member .status-badge.late {
+      background: #FFF8EB;
+      color: var(--warning);
+    }
+
+    .d5-member .status-badge.missing {
+      background: #FEF2F2;
+      color: var(--error);
+    }
+
+    /* ===== DIRECTION 6: STATUS LED ===== */
+    .d6 .panel {
+      border: none;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .d6-dashboard {
+      padding: 16px;
+    }
+
+    .d6-health-bar {
+      display: flex;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      gap: 2px;
+    }
+
+    .d6-health-bar .segment {
+      flex: 1;
+    }
+
+    .d6-health-bar .segment.success {
+      background: var(--success);
+    }
+
+    .d6-health-bar .segment.warning {
+      background: var(--warning);
+    }
+
+    .d6-health-bar .segment.error {
+      background: var(--error);
+    }
+
+    .d6-health-bar .segment.pending {
+      background: var(--border);
+    }
+
+    .d6-team-flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .d6-flow-col h4 {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .d6-flow-col.expected h4 {
+      border-color: var(--info);
+      color: var(--info);
+    }
+
+    .d6-flow-col.active h4 {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .d6-flow-col.issues h4 {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .d6-person {
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .d6-person:hover {
+      background: var(--surface-secondary);
+    }
+
+    .d6-person .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .d6-person .dot.success {
+      background: var(--success);
+    }
+
+    .d6-person .dot.warning {
+      background: var(--warning);
+      animation: pulse 2s infinite;
+    }
+
+    .d6-person .dot.info {
+      background: var(--info);
+    }
+
+    .d6-person .name {
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .d6-person .time {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .d6-person .role-code {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: white;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+    }
+
+    /* Situation Card overlay */
+    .d6-situation {
+      border-left: 4px solid var(--warning);
+      border-radius: 8px;
+      padding: 16px;
+      background: #FFF8EB;
+      margin-top: 12px;
+    }
+
+    .d6-situation .title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--warning);
+      margin-bottom: 4px;
+    }
+
+    .d6-situation .detail {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .d6-situation .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .d6-situation .action-btn {
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .d6-situation .action-btn.primary {
+      background: var(--coral);
+      color: white;
+    }
+
+    .d6-situation .action-btn.secondary {
+      background: white;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    /* Preview Link */
+    .preview-page {
+      padding: 24px;
+    }
+
+    .preview-page .preview-header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .preview-page .preview-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .preview-page .preview-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .preview-shift {
+      padding: 16px;
+      border-bottom: 1px solid #f0f0f4;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .preview-shift:last-child {
+      border-bottom: none;
+    }
+
+    .preview-shift .date {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .preview-shift .times {
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .preview-shift .role {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    /* Comparison toggle */
+    .compare-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: var(--text-primary);
+      color: white;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .compare-bar label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .compare-bar input[type="checkbox"] {
+      accent-color: var(--coral);
+    }
+
+    /* Side-by-side */
+    .side-by-side {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .panels {
+        grid-template-columns: 1fr;
+      }
+
+      .side-by-side {
+        grid-template-columns: 1fr;
+      }
+
+      .d4-grid {
+        font-size: 10px;
+      }
+
+      .d4-timetable-inner {
+        min-width: 1200px;
+      }
+
+      .d4-toolbar {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .d5-summary {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .d6-team-flow {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-tabs {
+        gap: 2px;
+      }
+
+      .nav-tab {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+    }
+
+    .mb-24 {
+      margin-bottom: 24px;
+    }
+
+    /* Inline SVG icons */
+    .icon {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      vertical-align: -2px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+    .icon-sm { width: 14px; height: 14px; }
+    .icon-lg { width: 20px; height: 20px; vertical-align: -4px; }
+  </style>
+</head>
+
+<body>
+
+<!-- SVG Sprite Sheet (hidden) -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+  <!-- Bell / Notification -->
+  <symbol id="icon-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+  </symbol>
+  <!-- Store / Shop -->
+  <symbol id="icon-store" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 9l1-4h16l1 4"/><path d="M3 9v11h18V9"/><path d="M9 21V13h6v8"/>
+  </symbol>
+  <!-- Hand Wave -->
+  <symbol id="icon-wave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 11V7a2 2 0 1 1 4 0v2"/><path d="M11 9V5a2 2 0 1 1 4 0v4"/><path d="M15 8V5a2 2 0 1 1 4 0v7c0 4.418-3.582 8-8 8h-1a8 8 0 0 1-8-8v-2a2 2 0 1 1 4 0v3"/>
+  </symbol>
+  <!-- Sun -->
+  <symbol id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </symbol>
+  <!-- Phone -->
+  <symbol id="icon-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+  </symbol>
+  <!-- Message / Chat -->
+  <symbol id="icon-message" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </symbol>
+  <!-- Clock -->
+  <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+  </symbol>
+  <!-- Alert Circle (no show) -->
+  <symbol id="icon-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+  </symbol>
+  <!-- Clipboard / Leave -->
+  <symbol id="icon-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+  </symbol>
+  <!-- Calendar -->
+  <symbol id="icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+  </symbol>
+  <!-- Warning Triangle -->
+  <symbol id="icon-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </symbol>
+  <!-- Check -->
+  <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </symbol>
+  <!-- X / Reject -->
+  <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </symbol>
+  <!-- Refresh / Rotate -->
+  <symbol id="icon-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+  </symbol>
+</svg>
+
+  <nav class="nav">
+    <h1>SCHEDULER</h1>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showDirection(0)"><span class="num">1</span>Clean Slate</button>
+      <button class="nav-tab" onclick="showDirection(1)"><span class="num">2</span>Bold Signal</button>
+      <button class="nav-tab" onclick="showDirection(2)"><span class="num">3</span>Warm Touch</button>
+      <button class="nav-tab" onclick="showDirection(3)"><span class="num">4</span>Dense Grid</button>
+      <button class="nav-tab" onclick="showDirection(4)"><span class="num">5</span>Card Forward</button>
+      <button class="nav-tab" onclick="showDirection(5)"><span class="num">6</span>Status Led</button>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <!-- DIRECTION 1: CLEAN SLATE -->
+    <div class="direction active d1" id="d1">
+      <div class="direction-header">
+        <h2>Clean Slate</h2>
+        <p>Maximum white space, hairline borders, subtle shadows. The schedule builder feels like a spreadsheet that
+          went to design school.</p>
+        <div class="tag" style="background: var(--surface-secondary); color: var(--text-secondary);">Minimal · Refined ·
+          Professional</div>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-label">Employee Home — Before Clock-In</div>
+          <div class="panel-body d1-employee">
+            <div class="d1-header">
+              <h3>SCHEDULER</h3>
+              <div class="d1-notif"><svg class="icon" style="stroke:var(--text-muted);"><use href="#icon-bell"/></svg></div>
+            </div>
+            <div class="d1-shift-card">
+              <div class="day">TODAY · Monday, Feb 24</div>
+              <div class="time">9:00 AM — 5:00 PM</div>
+              <div class="meta">
+                <span class="role-badge"><svg class="icon-sm icon" style="stroke:currentColor;"><use href="#icon-store"/></svg> CB Cashier</span>
+                <span>Downtown Branch</span>
+              </div>
+              <div class="d1-coworkers">
+                <div class="avatar" style="background: var(--role-forest);">SA</div>
+                <div class="avatar" style="background: var(--role-violet);">AI</div>
+                <span>Sarah, Aisha also on shift</span>
+              </div>
+            </div>
+            <button class="d1-cta">I'M HERE</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">Employee Home — Clocked In</div>
+          <div class="panel-body d1-employee d1-clocked">
+            <div class="d1-header">
+              <h3>SCHEDULER</h3>
+              <div class="d1-notif"><svg class="icon" style="stroke:var(--text-muted);"><use href="#icon-bell"/></svg></div>
+            </div>
+            <div class="d1-shift-card">
+              <div class="clock-header">CLOCKED IN · 9:02 AM <span class="check"><svg class="icon-sm icon" style="stroke:currentColor;"><use href="#icon-check"/></svg></span></div>
+              <div class="time">9:00 AM — 5:00 PM</div>
+              <div class="meta">
+                <span class="role-badge"><svg class="icon-sm icon" style="stroke:currentColor;"><use href="#icon-store"/></svg> CB Cashier</span>
+                <span>Downtown Branch</span>
+              </div>
+              <div class="d1-coworkers">
+                <div class="avatar" style="background: var(--role-forest);">SA</div>
+                <div class="avatar" style="background: var(--role-violet);">AI</div>
+                <span>Sarah, Aisha also on shift</span>
+              </div>
+            </div>
+            <button class="d1-clockout">CLOCK OUT</button>
+          </div>
+        </div>
+
+        <div class="panel full-width">
+          <div class="panel-label">Schedule Preview (No Account)</div>
+          <div class="panel-body preview-page">
+            <div class="preview-header">
+              <h3>Your Schedule — Downtown Branch</h3>
+              <p>Shared by Rachel · Updated Feb 23</p>
+            </div>
+            <div class="preview-shift">
+              <div>
+                <div class="date">Mon, Feb 24</div>
+                <div class="times">9:00 AM — 5:00 PM</div>
+              </div>
+              <div class="role" style="background: var(--role-ocean);">CB</div>
+            </div>
+            <div class="preview-shift">
+              <div>
+                <div class="date">Tue, Feb 25</div>
+                <div class="times">9:00 AM — 5:00 PM</div>
+              </div>
+              <div class="role" style="background: var(--role-ocean);">CB</div>
+            </div>
+            <div class="preview-shift">
+              <div>
+                <div class="date">Wed, Feb 26</div>
+                <div class="times" style="color: var(--text-muted);">Day Off</div>
+              </div>
+              <div></div>
+            </div>
+            <div class="preview-shift">
+              <div>
+                <div class="date">Thu, Feb 27</div>
+                <div class="times">10:00 AM — 6:00 PM</div>
+              </div>
+              <div class="role" style="background: var(--role-ocean);">CB</div>
+            </div>
+            <div class="preview-shift">
+              <div>
+                <div class="date">Fri, Feb 28</div>
+                <div class="times">9:00 AM — 5:00 PM</div>
+              </div>
+              <div class="role" style="background: var(--role-ocean);">CB</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIRECTION 2: BOLD SIGNAL -->
+    <div class="direction d2" id="d2">
+      <div class="direction-header">
+        <h2>Bold Signal</h2>
+        <p>Stronger visual hierarchy with larger coral moments and bolder weight contrasts. Important things shout,
+          everything else whispers.</p>
+        <div class="tag" style="background: var(--coral-subtle); color: var(--coral);">Confident · High-Contrast ·
+          Impactful</div>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-label">Employee Home — Before Clock-In</div>
+          <div class="panel-body d2-employee">
+            <div class="d1-header">
+              <h3 style="font-size: 18px; font-weight: 700;">SCHEDULER</h3>
+              <div class="d1-notif"><svg class="icon" style="stroke:var(--text-muted);"><use href="#icon-bell"/></svg></div>
+            </div>
+            <div class="d2-shift-card">
+              <div class="day">TODAY · MONDAY</div>
+              <div class="time">9:00 AM — 5:00 PM</div>
+              <div class="meta">
+                <span class="d1-shift-card role-badge"
+                  style="border:none; padding: 4px 10px; border-radius: 6px; font-size: 13px; background: var(--role-ocean); color: white;"><svg class="icon-sm icon" style="stroke:white;"><use href="#icon-store"/></svg>
+                  Cashier</span>
+                <span style="margin-left: 8px;">Downtown Branch</span>
+              </div>
+            </div>
+            <button class="d2-cta">I'M HERE</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">Employee Home — Clocked In</div>
+          <div class="panel-body d2-employee">
+            <div class="d1-header">
+              <h3 style="font-size: 18px; font-weight: 700;">SCHEDULER</h3>
+              <div class="d1-notif"><svg class="icon" style="stroke:var(--text-muted);"><use href="#icon-bell"/></svg></div>
+            </div>
+            <div class="d2-shift-card"
+              style="background: linear-gradient(135deg, var(--coral-subtle) 0%, #fff 40%); border-left: 6px solid var(--coral);">
+              <div style="font-size: 20px; font-weight: 700; color: var(--coral); margin-bottom: 4px;">CLOCKED IN · 9:02
+                AM <svg class="icon" style="stroke:var(--coral);"><use href="#icon-check"/></svg></div>
+              <div class="time">9:00 AM — 5:00 PM</div>
+              <div class="meta">
+                <span
+                  style="display:inline-block; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; background: var(--role-ocean); color: white;"><svg class="icon-sm icon" style="stroke:white;"><use href="#icon-store"/></svg>
+                  Cashier</span>
+                <span style="margin-left: 8px;">Downtown Branch</span>
+              </div>
+            </div>
+            <button class="d1-clockout" style="border-radius: 12px;">CLOCK OUT</button>
+          </div>
+        </div>
+
+        <div class="panel full-width">
+          <div class="panel-label">Manager Dashboard — Bold Stats</div>
+          <div class="panel-body" style="padding: 24px;">
+            <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px;">
+              <span style="font-size: 48px; font-weight: 700; color: var(--success);">5</span>
+              <span style="font-size: 24px; font-weight: 400; color: var(--text-muted);">/</span>
+              <span style="font-size: 48px; font-weight: 700; color: var(--text-primary);">6</span>
+              <span style="font-size: 16px; color: var(--text-secondary); margin-left: 8px;">clocked in · Morning
+                shift</span>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <div
+                style="display:flex; align-items:center; gap:8px; padding: 12px 16px; background: #ECFDF5; border-radius: 8px;">
+                <span style="width:10px;height:10px;border-radius:50%;background:var(--success);"></span>
+                <span style="font-weight:600;">Sarah</span>
+                <span style="font-size:12px;color:var(--text-muted);">9:01 AM</span>
+              </div>
+              <div
+                style="display:flex; align-items:center; gap:8px; padding: 12px 16px; background: #ECFDF5; border-radius: 8px;">
+                <span style="width:10px;height:10px;border-radius:50%;background:var(--success);"></span>
+                <span style="font-weight:600;">Aisha</span>
+                <span style="font-size:12px;color:var(--text-muted);">8:58 AM</span>
+              </div>
+              <div
+                style="display:flex; align-items:center; gap:8px; padding: 12px 16px; background: #ECFDF5; border-radius: 8px;">
+                <span style="width:10px;height:10px;border-radius:50%;background:var(--success);"></span>
+                <span style="font-weight:600;">David</span>
+                <span style="font-size:12px;color:var(--text-muted);">9:00 AM</span>
+              </div>
+              <div
+                style="display:flex; align-items:center; gap:8px; padding: 12px 16px; background: #ECFDF5; border-radius: 8px;">
+                <span style="width:10px;height:10px;border-radius:50%;background:var(--success);"></span>
+                <span style="font-weight:600;">Liam</span>
+                <span style="font-size:12px;color:var(--text-muted);">9:03 AM</span>
+              </div>
+              <div
+                style="display:flex; align-items:center; gap:8px; padding: 12px 16px; background: #ECFDF5; border-radius: 8px;">
+                <span style="width:10px;height:10px;border-radius:50%;background:var(--success);"></span>
+                <span style="font-weight:600;">Emma</span>
+                <span style="font-size:12px;color:var(--text-muted);">8:55 AM</span>
+              </div>
+              <div
+                style="display:flex; align-items:center; gap:8px; padding: 12px 16px; background: #FFF8EB; border-radius: 8px; border: 2px solid var(--warning);">
+                <span
+                  style="width:10px;height:10px;border-radius:50%;background:var(--warning);animation:pulse 2s infinite;"></span>
+                <span style="font-weight:700; color: var(--warning);">Marcus</span>
+                <span style="font-size:12px;color:var(--warning);">7 min late</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIRECTION 3: WARM TOUCH -->
+    <div class="direction d3" id="d3">
+      <div class="direction-header">
+        <h2>Warm Touch</h2>
+        <p>Softer shadows, warm-tinted neutrals, generous rounded corners. Feels like a friendly app, not a business
+          tool.</p>
+        <div class="tag" style="background: #FFF5F0; color: #C4553D;">Friendly · Approachable · Human</div>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-label">Employee Home — Before Clock-In</div>
+          <div class="panel-body d3-employee">
+            <div class="d3-greeting">Good morning,</div>
+            <div class="d3-name">Marcus <svg class="icon" style="stroke:var(--text-secondary);"><use href="#icon-wave"/></svg></div>
+            <div class="d3-shift-card">
+              <div class="day">TODAY · Monday, Feb 24</div>
+              <div class="time">9:00 AM — 5:00 PM</div>
+              <div class="meta">
+                <span class="role-badge"><svg class="icon-sm icon" style="stroke:currentColor;"><use href="#icon-store"/></svg> Cashier</span>
+                <span style="margin-left: 8px;">Downtown Branch</span>
+              </div>
+              <div class="d3-coworkers">
+                <div class="avatar" style="background: var(--role-forest);">SA</div>
+                <div class="avatar" style="background: var(--role-violet);">AI</div>
+                <span class="label">Working with Sarah & Aisha</span>
+              </div>
+            </div>
+            <button class="d3-cta">I'M HERE</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">Employee Home — Day Off</div>
+          <div class="panel-body d3-employee">
+            <div class="d3-greeting">Enjoy your day,</div>
+            <div class="d3-name">Marcus <svg class="icon" style="stroke:var(--warning);"><use href="#icon-sun"/></svg></div>
+            <div class="d3-shift-card" style="background: var(--surface-secondary); border-color: transparent;">
+              <div
+                style="font-size: 16px; font-weight: 600; color: var(--text-muted); text-align: center; padding: 12px 0;">
+                Day Off Today</div>
+            </div>
+            <div class="d3-shift-card">
+              <div class="day">NEXT SHIFT · Tuesday, Feb 25</div>
+              <div class="time">9:00 AM — 5:00 PM</div>
+              <div class="meta">
+                <span class="role-badge"><svg class="icon-sm icon" style="stroke:currentColor;"><use href="#icon-store"/></svg> Cashier</span>
+                <span style="margin-left: 8px;">Downtown Branch</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel full-width">
+          <div class="panel-label">Onboarding — 2FA with Schedule Visible</div>
+          <div class="panel-body"
+            style="padding: 32px; background: #FFFCFA; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center;">
+            <div>
+              <div style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Welcome to Downtown Branch</div>
+              <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 24px;">Set up your account to
+                see your full schedule and clock in.</div>
+              <div style="margin-bottom: 16px;">
+                <label
+                  style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Email</label>
+                <div
+                  style="padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 14px; color: var(--text-muted); background: var(--surface-secondary);">
+                  aisha.khan@email.com</div>
+              </div>
+              <div style="margin-bottom: 16px;">
+                <label
+                  style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Verification
+                  Code</label>
+                <div
+                  style="padding: 12px 16px; border: 2px solid var(--coral); border-radius: 12px; font-size: 14px; background: white;">
+                  _ _ _ _ _ _</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">We sent a code to your email
+                </div>
+              </div>
+              <button
+                style="width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--coral); color: white; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer;">Verify
+                & Continue</button>
+            </div>
+            <div style="opacity: 0.6; filter: blur(1px); pointer-events: none;">
+              <div style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 12px;">Your
+                upcoming shifts:</div>
+              <div class="preview-shift" style="padding: 12px 0;">
+                <div>
+                  <div class="date" style="font-size:13px;">Mon, Feb 24</div>
+                  <div class="times" style="font-size:16px;">9:00 AM — 5:00 PM</div>
+                </div>
+                <div class="role" style="background: var(--role-ocean); font-size: 11px;">CB</div>
+              </div>
+              <div class="preview-shift" style="padding: 12px 0;">
+                <div>
+                  <div class="date" style="font-size:13px;">Tue, Feb 25</div>
+                  <div class="times" style="font-size:16px;">9:00 AM — 5:00 PM</div>
+                </div>
+                <div class="role" style="background: var(--role-ocean); font-size: 11px;">CB</div>
+              </div>
+              <div class="preview-shift" style="padding: 12px 0;">
+                <div>
+                  <div class="date" style="font-size:13px;">Thu, Feb 27</div>
+                  <div class="times" style="font-size:16px;">10:00 AM — 6:00 PM</div>
+                </div>
+                <div class="role" style="background: var(--role-ocean); font-size: 11px;">CB</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIRECTION 4: DENSE GRID -->
+    <div class="direction d4" id="d4">
+      <div class="direction-header">
+        <h2>Dense Grid</h2>
+        <p>Two views of the same data. "By Person" shows coverage per employee. "By Day" shows coverage per time slot. Toggle between them — Rachel picks her mental model.</p>
+        <div class="tag" style="background: #EBF2FF; color: var(--role-ocean);">Efficient · Data-Dense · Professional
+        </div>
+      </div>
+
+      <div class="panels">
+        <!-- BY PERSON VIEW (Weekly) -->
+        <div class="panel full-width" id="d4-by-person">
+          <div class="panel-label">Schedule Builder — "By Person" (Weekly View)</div>
+          <div class="panel-body d4-builder">
+            <div class="d4-toolbar">
+              <h3>Week of Feb 24 — Downtown Branch</h3>
+              <div class="actions">
+                <button class="btn" style="background: var(--coral-subtle); color: var(--coral); border-color: var(--coral);" onclick="toggleD4View('person')">By Person</button>
+                <button class="btn" onclick="toggleD4View('day')">By Day</button>
+                <button class="btn"><svg class="icon-sm icon" style="stroke:currentColor;"><use href="#icon-refresh"/></svg> Template</button>
+                <button class="btn primary">Share Schedule</button>
+              </div>
+            </div>
+            <div class="d4-grid">
+              <div class="header"></div>
+              <div class="header">Mon 24</div>
+              <div class="header">Tue 25</div>
+              <div class="header">Wed 26</div>
+              <div class="header">Thu 27</div>
+              <div class="header">Fri 28</div>
+              <div class="header">Sat 1</div>
+              <div class="header">Sun 2</div>
+
+              <div class="employee-name"><span class="mini-avatar" style="background:var(--role-ocean);">MC</span>
+                Marcus</div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-ocean);"><span class="code">CB</span>9-5</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-ocean);"><span class="code">CB</span>9-5</div>
+              </div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-ocean);"><span class="code">CB</span>10-6</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-ocean);"><span class="code">CB</span>9-5</div>
+              </div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+
+              <div class="employee-name"><span class="mini-avatar" style="background:var(--role-forest);">SA</span>
+                Sarah</div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-forest);"><span class="code">FL</span>9-5</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-forest);"><span class="code">FL</span>9-5</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-forest);"><span class="code">FL</span>9-5</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-forest);"><span class="code">FL</span>9-5</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-forest);"><span class="code">FL</span>9-5</div>
+              </div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+
+              <div class="employee-name"><span class="mini-avatar" style="background:var(--role-violet);">AI</span>
+                Aisha</div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-violet);"><span class="code">KB</span>8-4</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-violet);"><span class="code">KB</span>8-4</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-violet);"><span class="code">KB</span>8-4</div>
+              </div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-violet);"><span class="code">KB</span>8-4</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-violet);"><span class="code">KB</span>10-4</div>
+              </div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+
+              <div class="employee-name"><span class="mini-avatar" style="background:var(--role-amber);">DV</span> David
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-amber);"><span class="code">DL</span>7-3</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-amber);"><span class="code">DL</span>7-3</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-amber);"><span class="code">DL</span>7-3</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-amber);"><span class="code">DL</span>7-3</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-amber);"><span class="code">DL</span>7-3</div>
+              </div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+
+              <div class="employee-name"><span class="mini-avatar" style="background:var(--role-teal);">LM</span> Liam
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-teal);"><span class="code">RC</span>10-6</div>
+              </div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-teal);"><span class="code">RC</span>10-6</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-teal);"><span class="code">RC</span>10-6</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-teal);"><span class="code">RC</span>10-6</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-teal);"><span class="code">RC</span>10-6</div>
+              </div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+
+              <div class="employee-name"><span class="mini-avatar" style="background:var(--role-rose);">EM</span> Emma
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-rose);"><span class="code">SC</span>6-2</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-rose);"><span class="code">SC</span>6-2</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-rose);"><span class="code">SC</span>6-2</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-rose);"><span class="code">SC</span>6-2</div>
+              </div>
+              <div class="cell">
+                <div class="shift-block" style="background:var(--role-rose);"><span class="code">SC</span>6-2</div>
+              </div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+              <div class="cell empty" style="background:#fafafa;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BY DAY VIEW (Timetable — continuous blocks, fixed-width, horizontally scrollable) -->
+        <div class="panel full-width" id="d4-by-day" style="display: none;">
+          <div class="panel-label">Schedule Builder — "By Day" (Timetable View)</div>
+          <div class="panel-body d4-builder">
+            <div class="d4-toolbar">
+              <h3>Week of Feb 24 — Downtown Branch</h3>
+              <div class="actions">
+                <button class="btn" onclick="toggleD4View('person')">By Person</button>
+                <button class="btn" style="background: var(--coral-subtle); color: var(--coral); border-color: var(--coral);" onclick="toggleD4View('day')">By Day</button>
+                <button class="btn"><svg class="icon-sm icon" style="stroke:currentColor;"><use href="#icon-refresh"/></svg> Template</button>
+                <button class="btn primary">Share Schedule</button>
+              </div>
+            </div>
+            <!-- Timetable: horizontal scroll on mobile, fixed-width blocks never compress -->
+            <div class="d4-timetable">
+              <div class="d4-timetable-inner">
+                <!-- Day headers -->
+                <div class="tt-header-row">
+                  <div class="tt-time-gutter"></div>
+                  <div class="tt-day-header">Mon 24</div>
+                  <div class="tt-day-header">Tue 25</div>
+                  <div class="tt-day-header">Wed 26</div>
+                  <div class="tt-day-header">Thu 27</div>
+                  <div class="tt-day-header">Fri 28</div>
+                  <div class="tt-day-header">Sat 1</div>
+                  <div class="tt-day-header">Sun 2</div>
+                </div>
+                <!-- Timetable body: time labels + day columns -->
+                <!-- 48px per hour · blocks = 52px wide · gap = 2px · col 0 at 2px, col 1 at 56px, col 2 at 110px -->
+                <div class="tt-body">
+                  <!-- Time gutter (6 AM – 10 PM) -->
+                  <div class="tt-time-gutter">
+                    <div class="tt-time-label" style="top:0;">6 AM</div>
+                    <div class="tt-time-label" style="top:48px;">7 AM</div>
+                    <div class="tt-time-label" style="top:96px;">8 AM</div>
+                    <div class="tt-time-label" style="top:144px;">9 AM</div>
+                    <div class="tt-time-label" style="top:192px;">10 AM</div>
+                    <div class="tt-time-label" style="top:240px;">11 AM</div>
+                    <div class="tt-time-label" style="top:288px;">12 PM</div>
+                    <div class="tt-time-label" style="top:336px;">1 PM</div>
+                    <div class="tt-time-label" style="top:384px;">2 PM</div>
+                    <div class="tt-time-label" style="top:432px;">3 PM</div>
+                    <div class="tt-time-label" style="top:480px;">4 PM</div>
+                    <div class="tt-time-label" style="top:528px;">5 PM</div>
+                    <div class="tt-time-label" style="top:576px;">6 PM</div>
+                    <div class="tt-time-label" style="top:624px;">7 PM</div>
+                    <div class="tt-time-label" style="top:672px;">8 PM</div>
+                    <div class="tt-time-label" style="top:720px;">9 PM</div>
+                  </div>
+
+                  <!-- MONDAY — Emma 6-2, Aisha 8-4, David 10-6, Sarah 2-10 (max 3 concurrent) -->
+                  <div class="tt-day-col">
+                    <div class="tt-hour-line" style="top:0;"></div><div class="tt-hour-line" style="top:48px;"></div><div class="tt-hour-line" style="top:96px;"></div><div class="tt-hour-line" style="top:144px;"></div><div class="tt-hour-line" style="top:192px;"></div><div class="tt-hour-line" style="top:240px;"></div><div class="tt-hour-line" style="top:288px;"></div><div class="tt-hour-line" style="top:336px;"></div><div class="tt-hour-line" style="top:384px;"></div><div class="tt-hour-line" style="top:432px;"></div><div class="tt-hour-line" style="top:480px;"></div><div class="tt-hour-line" style="top:528px;"></div><div class="tt-hour-line" style="top:576px;"></div><div class="tt-hour-line" style="top:624px;"></div><div class="tt-hour-line" style="top:672px;"></div><div class="tt-hour-line" style="top:720px;"></div>
+                    <!-- col 0: Emma 6AM-2PM -->
+                    <div class="tt-block" style="top:0; height:384px; left:2px; background:var(--role-rose);">
+                      <span class="code">SC</span><span class="name">Emma</span><span class="time">6a–2p</span>
+                    </div>
+                    <!-- col 1: Aisha 8AM-4PM -->
+                    <div class="tt-block" style="top:96px; height:384px; left:56px; background:var(--role-violet);">
+                      <span class="code">KB</span><span class="name">Aisha</span><span class="time">8a–4p</span>
+                    </div>
+                    <!-- col 2: David 10AM-6PM -->
+                    <div class="tt-block" style="top:192px; height:384px; left:110px; background:var(--role-amber);">
+                      <span class="code">DL</span><span class="name">David</span><span class="time">10a–6p</span>
+                    </div>
+                    <!-- col 0: Sarah 2PM-10PM (reuses Emma's slot after 2 PM) -->
+                    <div class="tt-block" style="top:384px; height:384px; left:2px; background:var(--role-forest);">
+                      <span class="code">FL</span><span class="name">Sarah</span><span class="time">2p–10p</span>
+                    </div>
+                  </div>
+
+                  <!-- TUESDAY — Emma 6-2, Marcus 9-5, David 10-6, Sarah 2-10 (max 3 concurrent) -->
+                  <div class="tt-day-col">
+                    <div class="tt-hour-line" style="top:0;"></div><div class="tt-hour-line" style="top:48px;"></div><div class="tt-hour-line" style="top:96px;"></div><div class="tt-hour-line" style="top:144px;"></div><div class="tt-hour-line" style="top:192px;"></div><div class="tt-hour-line" style="top:240px;"></div><div class="tt-hour-line" style="top:288px;"></div><div class="tt-hour-line" style="top:336px;"></div><div class="tt-hour-line" style="top:384px;"></div><div class="tt-hour-line" style="top:432px;"></div><div class="tt-hour-line" style="top:480px;"></div><div class="tt-hour-line" style="top:528px;"></div><div class="tt-hour-line" style="top:576px;"></div><div class="tt-hour-line" style="top:624px;"></div><div class="tt-hour-line" style="top:672px;"></div><div class="tt-hour-line" style="top:720px;"></div>
+                    <!-- col 0: Emma 6AM-2PM -->
+                    <div class="tt-block" style="top:0; height:384px; left:2px; background:var(--role-rose);">
+                      <span class="code">SC</span><span class="name">Emma</span><span class="time">6a–2p</span>
+                    </div>
+                    <!-- col 1: Marcus 9AM-5PM -->
+                    <div class="tt-block" style="top:144px; height:384px; left:56px; background:var(--role-ocean);">
+                      <span class="code">CB</span><span class="name">Marcus</span><span class="time">9a–5p</span>
+                    </div>
+                    <!-- col 2: David 10AM-6PM -->
+                    <div class="tt-block" style="top:192px; height:384px; left:110px; background:var(--role-amber);">
+                      <span class="code">DL</span><span class="name">David</span><span class="time">10a–6p</span>
+                    </div>
+                    <!-- col 0: Sarah 2PM-10PM -->
+                    <div class="tt-block" style="top:384px; height:384px; left:2px; background:var(--role-forest);">
+                      <span class="code">FL</span><span class="name">Sarah</span><span class="time">2p–10p</span>
+                    </div>
+                  </div>
+
+                  <!-- WEDNESDAY — Emma 6-2, Aisha 8-4, David 10-6, Sarah 2-10 (same as Mon) -->
+                  <div class="tt-day-col">
+                    <div class="tt-hour-line" style="top:0;"></div><div class="tt-hour-line" style="top:48px;"></div><div class="tt-hour-line" style="top:96px;"></div><div class="tt-hour-line" style="top:144px;"></div><div class="tt-hour-line" style="top:192px;"></div><div class="tt-hour-line" style="top:240px;"></div><div class="tt-hour-line" style="top:288px;"></div><div class="tt-hour-line" style="top:336px;"></div><div class="tt-hour-line" style="top:384px;"></div><div class="tt-hour-line" style="top:432px;"></div><div class="tt-hour-line" style="top:480px;"></div><div class="tt-hour-line" style="top:528px;"></div><div class="tt-hour-line" style="top:576px;"></div><div class="tt-hour-line" style="top:624px;"></div><div class="tt-hour-line" style="top:672px;"></div><div class="tt-hour-line" style="top:720px;"></div>
+                    <div class="tt-block" style="top:0; height:384px; left:2px; background:var(--role-rose);">
+                      <span class="code">SC</span><span class="name">Emma</span><span class="time">6a–2p</span>
+                    </div>
+                    <div class="tt-block" style="top:96px; height:384px; left:56px; background:var(--role-violet);">
+                      <span class="code">KB</span><span class="name">Aisha</span><span class="time">8a–4p</span>
+                    </div>
+                    <div class="tt-block" style="top:192px; height:384px; left:110px; background:var(--role-amber);">
+                      <span class="code">DL</span><span class="name">David</span><span class="time">10a–6p</span>
+                    </div>
+                    <div class="tt-block" style="top:384px; height:384px; left:2px; background:var(--role-forest);">
+                      <span class="code">FL</span><span class="name">Sarah</span><span class="time">2p–10p</span>
+                    </div>
+                  </div>
+
+                  <!-- THURSDAY — Emma 6-2, Marcus 9-5, David 10-6, Sarah 2-10 (same as Tue) -->
+                  <div class="tt-day-col">
+                    <div class="tt-hour-line" style="top:0;"></div><div class="tt-hour-line" style="top:48px;"></div><div class="tt-hour-line" style="top:96px;"></div><div class="tt-hour-line" style="top:144px;"></div><div class="tt-hour-line" style="top:192px;"></div><div class="tt-hour-line" style="top:240px;"></div><div class="tt-hour-line" style="top:288px;"></div><div class="tt-hour-line" style="top:336px;"></div><div class="tt-hour-line" style="top:384px;"></div><div class="tt-hour-line" style="top:432px;"></div><div class="tt-hour-line" style="top:480px;"></div><div class="tt-hour-line" style="top:528px;"></div><div class="tt-hour-line" style="top:576px;"></div><div class="tt-hour-line" style="top:624px;"></div><div class="tt-hour-line" style="top:672px;"></div><div class="tt-hour-line" style="top:720px;"></div>
+                    <div class="tt-block" style="top:0; height:384px; left:2px; background:var(--role-rose);">
+                      <span class="code">SC</span><span class="name">Emma</span><span class="time">6a–2p</span>
+                    </div>
+                    <div class="tt-block" style="top:144px; height:384px; left:56px; background:var(--role-ocean);">
+                      <span class="code">CB</span><span class="name">Marcus</span><span class="time">9a–5p</span>
+                    </div>
+                    <div class="tt-block" style="top:192px; height:384px; left:110px; background:var(--role-amber);">
+                      <span class="code">DL</span><span class="name">David</span><span class="time">10a–6p</span>
+                    </div>
+                    <div class="tt-block" style="top:384px; height:384px; left:2px; background:var(--role-forest);">
+                      <span class="code">FL</span><span class="name">Sarah</span><span class="time">2p–10p</span>
+                    </div>
+                  </div>
+
+                  <!-- FRIDAY — Emma 6-2, Aisha 8-4, David 10-6, Sarah 2-10 (same as Mon) -->
+                  <div class="tt-day-col">
+                    <div class="tt-hour-line" style="top:0;"></div><div class="tt-hour-line" style="top:48px;"></div><div class="tt-hour-line" style="top:96px;"></div><div class="tt-hour-line" style="top:144px;"></div><div class="tt-hour-line" style="top:192px;"></div><div class="tt-hour-line" style="top:240px;"></div><div class="tt-hour-line" style="top:288px;"></div><div class="tt-hour-line" style="top:336px;"></div><div class="tt-hour-line" style="top:384px;"></div><div class="tt-hour-line" style="top:432px;"></div><div class="tt-hour-line" style="top:480px;"></div><div class="tt-hour-line" style="top:528px;"></div><div class="tt-hour-line" style="top:576px;"></div><div class="tt-hour-line" style="top:624px;"></div><div class="tt-hour-line" style="top:672px;"></div><div class="tt-hour-line" style="top:720px;"></div>
+                    <div class="tt-block" style="top:0; height:384px; left:2px; background:var(--role-rose);">
+                      <span class="code">SC</span><span class="name">Emma</span><span class="time">6a–2p</span>
+                    </div>
+                    <div class="tt-block" style="top:96px; height:384px; left:56px; background:var(--role-violet);">
+                      <span class="code">KB</span><span class="name">Aisha</span><span class="time">8a–4p</span>
+                    </div>
+                    <div class="tt-block" style="top:192px; height:384px; left:110px; background:var(--role-amber);">
+                      <span class="code">DL</span><span class="name">David</span><span class="time">10a–6p</span>
+                    </div>
+                    <div class="tt-block" style="top:384px; height:384px; left:2px; background:var(--role-forest);">
+                      <span class="code">FL</span><span class="name">Sarah</span><span class="time">2p–10p</span>
+                    </div>
+                  </div>
+
+                  <!-- SATURDAY — Aisha 8AM-12PM only -->
+                  <div class="tt-day-col tt-light">
+                    <div class="tt-hour-line" style="top:0;"></div><div class="tt-hour-line" style="top:48px;"></div><div class="tt-hour-line" style="top:96px;"></div><div class="tt-hour-line" style="top:144px;"></div><div class="tt-hour-line" style="top:192px;"></div><div class="tt-hour-line" style="top:240px;"></div><div class="tt-hour-line" style="top:288px;"></div><div class="tt-hour-line" style="top:336px;"></div><div class="tt-hour-line" style="top:384px;"></div><div class="tt-hour-line" style="top:432px;"></div><div class="tt-hour-line" style="top:480px;"></div><div class="tt-hour-line" style="top:528px;"></div><div class="tt-hour-line" style="top:576px;"></div><div class="tt-hour-line" style="top:624px;"></div><div class="tt-hour-line" style="top:672px;"></div><div class="tt-hour-line" style="top:720px;"></div>
+                    <div class="tt-block" style="top:96px; height:192px; left:2px; background:var(--role-violet);">
+                      <span class="code">KB</span><span class="name">Aisha</span><span class="time">8a–12p</span>
+                    </div>
+                  </div>
+
+                  <!-- SUNDAY — empty, + Add Shift placeholder -->
+                  <div class="tt-day-col tt-light">
+                    <div class="tt-hour-line" style="top:0;"></div><div class="tt-hour-line" style="top:48px;"></div><div class="tt-hour-line" style="top:96px;"></div><div class="tt-hour-line" style="top:144px;"></div><div class="tt-hour-line" style="top:192px;"></div><div class="tt-hour-line" style="top:240px;"></div><div class="tt-hour-line" style="top:288px;"></div><div class="tt-hour-line" style="top:336px;"></div><div class="tt-hour-line" style="top:384px;"></div><div class="tt-hour-line" style="top:432px;"></div><div class="tt-hour-line" style="top:480px;"></div><div class="tt-hour-line" style="top:528px;"></div><div class="tt-hour-line" style="top:576px;"></div><div class="tt-hour-line" style="top:624px;"></div><div class="tt-hour-line" style="top:672px;"></div><div class="tt-hour-line" style="top:720px;"></div>
+                    <div class="tt-empty-add" style="top:96px; left:2px; width:52px;">+ Add Shift</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; min-width: 0;">
+              <span>6 AM – 10 PM · Swipe to scroll on mobile</span>
+              <span>Peak: <strong style="color: var(--text-primary);">Mon–Fri 10a–2p</strong> (3 staff)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIRECTION 5: CARD FORWARD -->
+    <div class="direction d5" id="d5">
+      <div class="direction-header">
+        <h2>Card Forward</h2>
+        <p>Everything is a card with clear boundaries. Strong borders, distinct sections. Zero ambiguity about where one
+          element ends and another begins.</p>
+        <div class="tag" style="background: #F0F0F4; color: var(--text-primary);">Structured · Distinct · Clear</div>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-label">Manager Dashboard — Team Status</div>
+          <div class="panel-body d5-dashboard">
+            <div class="d5-summary">
+              <div class="d5-stat success">
+                <div class="number">4</div>
+                <div class="label">On Time</div>
+              </div>
+              <div class="d5-stat warning">
+                <div class="number">1</div>
+                <div class="label">Late</div>
+              </div>
+              <div class="d5-stat error">
+                <div class="number">1</div>
+                <div class="label">Missing</div>
+              </div>
+            </div>
+            <div class="d5-team-list">
+              <div class="d5-member">
+                <div class="status-ring on-time">
+                  <div class="avatar" style="background:var(--role-forest);">SA</div>
+                </div>
+                <div class="info">
+                  <div class="name">Sarah</div>
+                  <div class="shift-time">9:00 AM — 5:00 PM · Floor Staff</div>
+                </div>
+                <div class="status-badge on-time">On Time</div>
+              </div>
+              <div class="d5-member">
+                <div class="status-ring on-time">
+                  <div class="avatar" style="background:var(--role-violet);">AI</div>
+                </div>
+                <div class="info">
+                  <div class="name">Aisha</div>
+                  <div class="shift-time">8:00 AM — 4:00 PM · Kitchen</div>
+                </div>
+                <div class="status-badge on-time">On Time</div>
+              </div>
+              <div class="d5-member">
+                <div class="status-ring on-time">
+                  <div class="avatar" style="background:var(--role-amber);">DV</div>
+                </div>
+                <div class="info">
+                  <div class="name">David</div>
+                  <div class="shift-time">7:00 AM — 3:00 PM · Delivery</div>
+                </div>
+                <div class="status-badge on-time">On Time</div>
+              </div>
+              <div class="d5-member">
+                <div class="status-ring on-time">
+                  <div class="avatar" style="background:var(--role-teal);">LM</div>
+                </div>
+                <div class="info">
+                  <div class="name">Liam</div>
+                  <div class="shift-time">10:00 AM — 6:00 PM · Reception</div>
+                </div>
+                <div class="status-badge on-time">On Time</div>
+              </div>
+              <div class="d5-member" style="border-color: var(--warning);">
+                <div class="status-ring late">
+                  <div class="avatar" style="background:var(--role-ocean);">MC</div>
+                </div>
+                <div class="info">
+                  <div class="name">Marcus</div>
+                  <div class="shift-time">9:00 AM — 5:00 PM · Cashier</div>
+                </div>
+                <div class="status-badge late">7 min late</div>
+              </div>
+              <div class="d5-member" style="border-color: var(--error);">
+                <div class="status-ring missing">
+                  <div class="avatar" style="background:var(--role-rose);">EM</div>
+                </div>
+                <div class="info">
+                  <div class="name">Emma</div>
+                  <div class="shift-time">6:00 AM — 2:00 PM · Security</div>
+                </div>
+                <div class="status-badge missing">No Show</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">Manager Dashboard — Action Feed</div>
+          <div class="panel-body" style="padding: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="border: 2px solid var(--warning); border-radius: 8px; padding: 12px 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                  <div>
+                    <div style="font-size: 13px; font-weight: 700; color: var(--warning);"><svg class="icon" style="stroke:var(--warning);"><use href="#icon-warning"/></svg> Marcus — 7 minutes late
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Cashier · 9:00 AM shift ·
+                      Downtown</div>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                  <button
+                    style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; border: none; background: var(--coral); color: white; cursor: pointer; font-family: inherit;"><svg class="icon-sm icon" style="stroke:white;"><use href="#icon-phone"/></svg>
+                    Call</button>
+                  <button
+                    style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); background: white; cursor: pointer; font-family: inherit; color: var(--text-secondary);"><svg class="icon-sm icon" style="stroke:currentColor;"><use href="#icon-message"/></svg>
+                    Text</button>
+                  <button
+                    style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); background: white; cursor: pointer; font-family: inherit; color: var(--text-secondary);"><svg class="icon-sm icon" style="stroke:currentColor;"><use href="#icon-clock"/></svg>
+                    Log Clock-In</button>
+                </div>
+              </div>
+              <div style="border: 2px solid var(--error); border-radius: 8px; padding: 12px 16px;">
+                <div style="font-size: 13px; font-weight: 700; color: var(--error);"><svg class="icon" style="stroke:var(--error);"><use href="#icon-alert"/></svg> Emma — No Show</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Security · 6:00 AM shift ·
+                  Downtown</div>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                  <button
+                    style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; border: none; background: var(--coral); color: white; cursor: pointer; font-family: inherit;"><svg class="icon-sm icon" style="stroke:white;"><use href="#icon-phone"/></svg>
+                    Call</button>
+                  <button
+                    style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); background: white; cursor: pointer; font-family: inherit; color: var(--text-secondary);">Find
+                    Cover</button>
+                </div>
+              </div>
+              <div style="border: 2px solid var(--info); border-radius: 8px; padding: 12px 16px;">
+                <div style="font-size: 13px; font-weight: 600; color: var(--info);"><svg class="icon" style="stroke:var(--info);"><use href="#icon-clipboard"/></svg> Leave Request</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Sarah requested Mar 3-5 off ·
+                  "Family event"</div>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                  <button
+                    style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; border: none; background: var(--success); color: white; cursor: pointer; font-family: inherit;"><svg class="icon-sm icon" style="stroke:white;"><use href="#icon-check"/></svg>
+                    Approve</button>
+                  <button
+                    style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); background: white; cursor: pointer; font-family: inherit; color: var(--text-secondary);"><svg class="icon-sm icon" style="stroke:currentColor;"><use href="#icon-x"/></svg>
+                    Deny</button>
+                </div>
+              </div>
+              <div style="border: 2px solid var(--border); border-radius: 8px; padding: 12px 16px;">
+                <div style="font-size: 13px; font-weight: 600;"><svg class="icon" style="stroke:var(--text-primary);"><use href="#icon-calendar"/></svg> Schedule shared</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Week of Mar 3 · 4 of 6 viewed
+                </div>
+                <div style="display: flex; gap: 4px; margin-top: 8px;">
+                  <span
+                    style="width:24px;height:24px;border-radius:50%;background:var(--role-forest);display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:white;font-weight:600;">SA</span>
+                  <span
+                    style="width:24px;height:24px;border-radius:50%;background:var(--role-violet);display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:white;font-weight:600;">AI</span>
+                  <span
+                    style="width:24px;height:24px;border-radius:50%;background:var(--role-amber);display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:white;font-weight:600;">DV</span>
+                  <span
+                    style="width:24px;height:24px;border-radius:50%;background:var(--role-teal);display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:white;font-weight:600;">LM</span>
+                  <span
+                    style="width:24px;height:24px;border-radius:50%;background:var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-muted);font-weight:600;">MC</span>
+                  <span
+                    style="width:24px;height:24px;border-radius:50%;background:var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-muted);font-weight:600;">EM</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIRECTION 6: STATUS LED -->
+    <div class="direction d6" id="d6">
+      <div class="direction-header">
+        <h2>Status Led</h2>
+        <p>Status colors are prominent throughout. Team health visible at every level. Green/amber/red are co-stars with
+          coral.</p>
+        <div class="tag" style="background: #ECFDF5; color: var(--success);">Health-First · Real-Time · Operational
+        </div>
+      </div>
+
+      <div class="panels">
+        <div class="panel full-width">
+          <div class="panel-label">Manager Dashboard — Team Flow View</div>
+          <div class="panel-body d6-dashboard">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div>
+                <span style="font-size: 24px; font-weight: 700;">Morning Shift</span>
+                <span style="font-size: 14px; color: var(--text-muted); margin-left: 8px;">Downtown · 6 people</span>
+              </div>
+              <span style="font-size: 14px; font-weight: 600; color: var(--success);">4/6 Active</span>
+            </div>
+            <div class="d6-health-bar">
+              <div class="segment success"></div>
+              <div class="segment success"></div>
+              <div class="segment success"></div>
+              <div class="segment success"></div>
+              <div class="segment warning"></div>
+              <div class="segment error"></div>
+            </div>
+            <div class="d6-team-flow">
+              <div class="d6-flow-col expected">
+                <h4>Expected (1)</h4>
+                <div class="d6-person">
+                  <span class="dot info"></span>
+                  <span class="name">Liam</span>
+                  <span class="role-code" style="background:var(--role-teal);">RC</span>
+                  <span class="time">10:00 AM</span>
+                </div>
+              </div>
+              <div class="d6-flow-col active">
+                <h4>Active (4)</h4>
+                <div class="d6-person">
+                  <span class="dot success"></span>
+                  <span class="name">Sarah</span>
+                  <span class="role-code" style="background:var(--role-forest);">FL</span>
+                  <span class="time">9:01 AM</span>
+                </div>
+                <div class="d6-person">
+                  <span class="dot success"></span>
+                  <span class="name">Aisha</span>
+                  <span class="role-code" style="background:var(--role-violet);">KB</span>
+                  <span class="time">7:58 AM</span>
+                </div>
+                <div class="d6-person">
+                  <span class="dot success"></span>
+                  <span class="name">David</span>
+                  <span class="role-code" style="background:var(--role-amber);">DL</span>
+                  <span class="time">7:00 AM</span>
+                </div>
+                <div class="d6-person">
+                  <span class="dot success"></span>
+                  <span class="name">Emma</span>
+                  <span class="role-code" style="background:var(--role-rose);">SC</span>
+                  <span class="time">5:58 AM</span>
+                </div>
+              </div>
+              <div class="d6-flow-col issues">
+                <h4>Attention (1)</h4>
+                <div class="d6-person" style="background: #FFF8EB; border-radius: 8px;">
+                  <span class="dot warning"></span>
+                  <span class="name" style="color: var(--warning);">Marcus</span>
+                  <span class="role-code" style="background:var(--role-ocean);">CB</span>
+                  <span class="time" style="color: var(--warning);">7 min late</span>
+                </div>
+              </div>
+            </div>
+            <div class="d6-situation">
+              <div class="title"><svg class="icon" style="stroke:var(--warning);"><use href="#icon-warning"/></svg> Marcus — Cashier shift started 7 minutes ago</div>
+              <div class="detail">9:00 AM — 5:00 PM · Downtown Branch · Usually on time (95%)</div>
+              <div class="actions">
+                <button class="action-btn primary"><svg class="icon-sm icon" style="stroke:white;"><use href="#icon-phone"/></svg> Call Marcus</button>
+                <button class="action-btn secondary"><svg class="icon-sm icon" style="stroke:currentColor;"><use href="#icon-message"/></svg> Send Text</button>
+                <button class="action-btn secondary"><svg class="icon-sm icon" style="stroke:currentColor;"><use href="#icon-clock"/></svg> Log Manual Clock-In</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">Owner View — All Locations Summary</div>
+          <div class="panel-body" style="padding: 16px;">
+            <div style="margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: 600;">Downtown Branch</span>
+                <span style="font-size: 13px; font-weight: 600; color: var(--warning);">5/6</span>
+              </div>
+              <div class="d6-health-bar" style="margin-bottom: 0;">
+                <div class="segment success"></div>
+                <div class="segment success"></div>
+                <div class="segment success"></div>
+                <div class="segment success"></div>
+                <div class="segment success"></div>
+                <div class="segment warning"></div>
+              </div>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: 600;">Uptown Cafe</span>
+                <span style="font-size: 13px; font-weight: 600; color: var(--success);">4/4</span>
+              </div>
+              <div class="d6-health-bar" style="margin-bottom: 0;">
+                <div class="segment success"></div>
+                <div class="segment success"></div>
+                <div class="segment success"></div>
+                <div class="segment success"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: 600;">Mall Kiosk</span>
+                <span style="font-size: 13px; font-weight: 600; color: var(--success);">2/2</span>
+              </div>
+              <div class="d6-health-bar" style="margin-bottom: 0;">
+                <div class="segment success"></div>
+                <div class="segment success"></div>
+              </div>
+            </div>
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center;">
+              <span style="font-size: 30px; font-weight: 700; color: var(--success);">11</span>
+              <span style="font-size: 16px; color: var(--text-muted);"> / 12 clocked in</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">Timesheet Summary — Weekly Hours</div>
+          <div class="panel-body" style="padding: 16px; font-size: 13px;">
+            <div
+              style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--text-muted); font-size: 11px;">
+              <span>Employee</span>
+              <span>Scheduled → Actual</span>
+            </div>
+            <div
+              style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
+              <span style="font-weight: 600;">Sarah</span>
+              <span>40h → <span style="color: var(--success); font-weight: 600;">40h 12m</span></span>
+            </div>
+            <div
+              style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
+              <span style="font-weight: 600;">Marcus</span>
+              <span>32h → <span style="color: var(--warning); font-weight: 600;">34h 45m</span> <span
+                  style="font-size: 11px; color: var(--warning);">+2h 45m</span></span>
+            </div>
+            <div
+              style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
+              <span style="font-weight: 600;">Aisha</span>
+              <span>40h → <span style="color: var(--success); font-weight: 600;">39h 48m</span></span>
+            </div>
+            <div
+              style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
+              <span style="font-weight: 600;">David</span>
+              <span>40h → <span style="color: var(--success); font-weight: 600;">40h 5m</span></span>
+            </div>
+            <div
+              style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
+              <span style="font-weight: 600;">Liam</span>
+              <span>40h → <span style="color: var(--error); font-weight: 600;">45h 30m</span> <span
+                  style="font-size: 11px; color: var(--error);">+5h 30m OT</span></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+              <span style="font-weight: 600;">Emma</span>
+              <span>40h → <span style="color: var(--success); font-weight: 600;">40h 0m</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll('.nav-tab');
+    const directions = document.querySelectorAll('.direction');
+
+    function showDirection(index) {
+      tabs.forEach(t => t.classList.remove('active'));
+      directions.forEach(d => d.classList.remove('active'));
+      tabs[index].classList.add('active');
+      directions[index].classList.add('active');
+    }
+
+    function toggleD4View(view) {
+      const byPerson = document.getElementById('d4-by-person');
+      const byDay = document.getElementById('d4-by-day');
+      if (view === 'person') {
+        byPerson.style.display = '';
+        byDay.style.display = 'none';
+      } else {
+        byPerson.style.display = 'none';
+        byDay.style.display = '';
+      }
+    }
+  </script>
+
+</body>
+
+</html>

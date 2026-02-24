@@ -1,0 +1,11 @@
+<h2>Reminder: View Your Schedule</h2>
+<p>Hi {{firstName}},</p>
+<p>A schedule was published for your team but you haven't viewed it yet. Please review your upcoming shifts.</p>
+<div class="detail">
+  <strong>Schedule:</strong> {{scheduleName}}<br>
+  <strong>Period:</strong> {{startDate}} – {{endDate}}
+</div>
+{{#if link}}
+<p><a href="{{link}}" class="btn">View My Schedule</a></p>
+{{/if}}
+<p>Viewing the schedule confirms you're aware of your assigned shifts.</p>

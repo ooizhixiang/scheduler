@@ -1,0 +1,12 @@
+<h2>Pending Approval Requires Your Attention</h2>
+<p>Hi {{firstName}},</p>
+<p>You have a pending approval request that needs your attention.</p>
+<div class="detail">
+  <strong>Request from:</strong> {{requesterName}}<br>
+  <strong>Type:</strong> {{requestType}}<br>
+  <strong>Submitted:</strong> {{submittedDate}}
+</div>
+{{#if link}}
+<p><a href="{{link}}" class="btn">Review Request</a></p>
+{{/if}}
+<p>Please review this request at your earliest convenience.</p>

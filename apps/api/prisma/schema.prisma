@@ -1,0 +1,651 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Employee (doubles as User) ────────────────────────────────────────────
+
+model Employee {
+  id               String          @id @default(uuid())
+  tenantId         String          @map("tenant_id")
+  email            String
+  passwordHash     String?         @map("password_hash")
+  firstName        String          @map("first_name")
+  lastName         String          @map("last_name")
+  phone            String?
+  systemRole       SystemRole      @default(EMPLOYEE) @map("system_role")
+  employmentType   EmploymentType  @default(FULL_TIME) @map("employment_type")
+  status           EmployeeStatus  @default(INVITED)
+  hireDate         DateTime?       @map("hire_date")
+  weeklyHoursCap   Float?          @map("weekly_hours_cap")
+
+  // Auth fields
+  inviteToken      String?         @map("invite_token")
+  inviteExpiresAt  DateTime?       @map("invite_expires_at")
+  resetToken       String?         @map("reset_token")
+  resetExpiresAt   DateTime?       @map("reset_expires_at")
+  lastLoginAt      DateTime?       @map("last_login_at")
+  notificationPrefs Json?          @map("notification_prefs")
+
+  // Relations
+  departmentId     String?         @map("department_id")
+  department       Department?     @relation("EmployeeDepartment", fields: [departmentId], references: [id], onDelete: SetNull)
+
+  employeeRoles    EmployeeRole[]
+  groupMembers     GroupMember[]
+  notifications    Notification[]  @relation("RecipientNotifications")
+  auditLogs        AuditLog[]      @relation("ActorAuditLogs")
+
+  sessions           Session[]       @relation("EmployeeSessions")
+  managedDepartments Department[]  @relation("DepartmentManager")
+
+  // Scheduling relations
+  shifts             Shift[]         @relation("EmployeeShifts")
+  scheduleViews      ScheduleView[]  @relation("EmployeeScheduleViews")
+  availability       Availability[]  @relation("EmployeeAvailability")
+  publishedSchedules Schedule[]      @relation("SchedulePublisher")
+  createdSchedules   Schedule[]      @relation("ScheduleCreator")
+  previewTokens      PreviewToken[]  @relation("EmployeePreviewTokens")
+  clockEvents        ClockEvent[]    @relation("EmployeeClockEvents")
+  clockEventAdjustments ClockEvent[] @relation("ClockEventAdjuster")
+  timesheetReviews TimesheetReview[] @relation("TimesheetReviewer")
+  leaveRequests       LeaveRequest[]  @relation("EmployeeLeaveRequests")
+  leaveRequestReviews LeaveRequest[]  @relation("LeaveRequestReviewer")
+
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, departmentId])
+  @@map("employees")
+}
+
+// ─── Session ──────────────────────────────────────────────────────────────
+
+model Session {
+  id               String    @id @default(uuid())
+  tenantId         String    @map("tenant_id")
+  employeeId       String    @map("employee_id")
+  refreshTokenHash String    @map("refresh_token_hash")
+  expiresAt        DateTime  @map("expires_at")
+  revokedAt        DateTime? @map("revoked_at")
+  ipAddress        String?   @map("ip_address")
+  userAgent        String?   @map("user_agent")
+
+  employee         Employee  @relation("EmployeeSessions", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  @@index([employeeId])
+  @@index([refreshTokenHash])
+  @@index([tenantId])
+  @@map("sessions")
+}
+
+// ─── Role ──────────────────────────────────────────────────────────────────
+
+model Role {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  name        String
+  shortCode   String   @map("short_code")
+  description String?
+  color       String   @default("#6366f1")
+  icon        String?
+
+  employeeRoles EmployeeRole[]
+  shifts        Shift[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([tenantId, name])
+  @@unique([tenantId, shortCode])
+  @@index([tenantId])
+  @@map("roles")
+}
+
+// ─── EmployeeRole (join table) ─────────────────────────────────────────────
+
+model EmployeeRole {
+  id         String   @id @default(uuid())
+  tenantId   String   @map("tenant_id")
+  employeeId String   @map("employee_id")
+  roleId     String   @map("role_id")
+
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([employeeId, roleId])
+  @@index([tenantId])
+  @@map("employee_roles")
+}
+
+// ─── Department ────────────────────────────────────────────────────────────
+
+model Department {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  name      String
+  managerId String?  @map("manager_id")
+
+  manager   Employee? @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+  employees Employee[] @relation("EmployeeDepartment")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("departments")
+}
+
+// ─── Group ─────────────────────────────────────────────────────────────────
+
+model Group {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  name        String
+  description String?
+
+  members     GroupMember[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("groups")
+}
+
+// ─── GroupMember (join table) ──────────────────────────────────────────────
+
+model GroupMember {
+  id         String   @id @default(uuid())
+  tenantId   String   @map("tenant_id")
+  groupId    String   @map("group_id")
+  employeeId String   @map("employee_id")
+
+  group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([groupId, employeeId])
+  @@index([tenantId])
+  @@map("group_members")
+}
+
+// ─── Notification ──────────────────────────────────────────────────────────
+
+model Notification {
+  id          String              @id @default(uuid())
+  tenantId    String              @map("tenant_id")
+  recipientId String              @map("recipient_id")
+  type        NotificationType
+  channel     NotificationChannel
+  eventId     String              @map("event_id")
+  title       String
+  body        String
+  link        String?
+  isRead      Boolean             @default(false) @map("is_read")
+  readAt      DateTime?           @map("read_at")
+
+  recipient   Employee            @relation("RecipientNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+  emailJobs   EmailJob[]
+
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  @@index([tenantId, recipientId, isRead])
+  @@index([tenantId, recipientId, createdAt])
+  @@index([tenantId, type, recipientId, createdAt])
+  @@map("notifications")
+}
+
+model EmailJob {
+  id              String         @id @default(uuid())
+  tenantId        String         @map("tenant_id")
+  notificationId  String?        @map("notification_id")
+  recipientEmail  String         @map("recipient_email")
+  recipientName   String         @map("recipient_name")
+  subject         String
+  htmlBody        String         @map("html_body")
+  status          EmailJobStatus @default(PENDING)
+  attempts        Int            @default(0)
+  maxAttempts     Int            @default(3) @map("max_attempts")
+  lastError       String?        @map("last_error")
+  nextRetryAt     DateTime       @default(now()) @map("next_retry_at")
+  deliveredAt     DateTime?      @map("delivered_at")
+
+  notification    Notification?  @relation(fields: [notificationId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  @@index([status, nextRetryAt])
+  @@index([tenantId, status])
+  @@map("email_jobs")
+}
+
+// ─── AuditLog ──────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String      @id @default(uuid())
+  tenantId    String      @map("tenant_id")
+  actorId     String?     @map("actor_id")
+  action      AuditAction
+  entityType  String      @map("entity_type")
+  entityId    String      @map("entity_id")
+  oldValues   Json?       @map("old_values")
+  newValues   Json?       @map("new_values")
+  ipAddress   String?     @map("ip_address")
+
+  actor       Employee?   @relation("ActorAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@index([tenantId, entityType, entityId])
+  @@index([tenantId, actorId])
+  @@index([tenantId, createdAt])
+  @@map("audit_logs")
+}
+
+// ─── CompanySettings ───────────────────────────────────────────────────────
+
+model CompanySettings {
+  id                      String             @id @default(uuid())
+  tenantId                String             @unique @map("tenant_id")
+  companyName             String             @default("My Company") @map("company_name")
+  timezone                String             @default("UTC")
+  workWeekStartDay        Int                @default(1) @map("work_week_start_day")
+  defaultShiftDuration    Float              @default(8) @map("default_shift_duration")
+  maxOvertimeHoursPerWeek Float              @default(10) @map("max_overtime_hours_per_week")
+  scheduleVisibility      ScheduleVisibility @default(SAME_DEPARTMENT) @map("schedule_visibility")
+  midYearJoinPolicy       MidYearJoinPolicy  @default(PRORATED) @map("mid_year_join_policy")
+  annualLeaveDefaultDays  Int                @default(20) @map("annual_leave_default_days")
+  sickLeaveDefaultDays    Int                @default(10) @map("sick_leave_default_days")
+  leaveEscalationHours    Int                @default(48) @map("leave_escalation_hours")
+
+  // Setup wizard fields
+  schedulingCadence       String             @default("WEEKLY") @map("scheduling_cadence")
+  customPeriodDays        Int?               @map("custom_period_days")
+  breakRules              Json?              @map("break_rules")
+  publishDay              Int?               @map("publish_day")
+  setupComplete           Boolean            @default(false) @map("setup_complete")
+
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @updatedAt @map("updated_at")
+
+  @@map("company_settings")
+}
+
+// ─── Enums ─────────────────────────────────────────────────────────────────
+
+enum SystemRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CASUAL
+  CONTRACT
+}
+
+enum EmployeeStatus {
+  INVITED
+  ACTIVE
+  ARCHIVED
+}
+
+enum NotificationType {
+  ACCOUNT_INVITE
+  PASSWORD_RESET
+  ROLE_ASSIGNED
+  ROLE_REMOVED
+  DEPARTMENT_CHANGED
+  GROUP_ADDED
+  GROUP_REMOVED
+  SETTINGS_UPDATED
+  EMPLOYEE_ARCHIVED
+  EMPLOYEE_REACTIVATED
+  SCHEDULE_PUBLISHED
+  SCHEDULE_UNPUBLISHED
+  SCHEDULE_AMENDED
+  SCHEDULE_VIEW_REMINDER
+  ADHOC_CLOCK_IN
+  MISSING_CLOCK_IN_REMINDER
+  CLOCK_OUT_WARNING
+  AUTO_CLOCK_OUT
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  LEAVE_NUDGE
+  LEAVE_ESCALATED
+  EMPLOYEE_JOINED
+  MISSING_EMPLOYEES
+  ALL_CLEAR
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+}
+
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum LeaveReason {
+  SICK
+  PERSONAL
+  VACATION
+  OTHER
+}
+
+enum EmailJobStatus {
+  PENDING
+  PROCESSING
+  DELIVERED
+  FAILED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  ARCHIVE
+  REACTIVATE
+  LOGIN
+  LOGOUT
+  PASSWORD_RESET
+  INVITE_SENT
+  PUBLISH
+  UNPUBLISH
+  COPY
+  CLOCK_IN
+  CLOCK_OUT
+}
+
+enum ScheduleVisibility {
+  OWN_ONLY
+  SAME_DEPARTMENT
+  ALL
+}
+
+enum MidYearJoinPolicy {
+  FULL_ALLOCATION
+  PRORATED
+}
+
+enum LocationStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ScheduleStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum ClockEventType {
+  CLOCK_IN
+  CLOCK_OUT
+}
+
+enum ClockMethod {
+  GPS
+  MANUAL
+  AUTO
+}
+
+// ─── Location ─────────────────────────────────────────────────────────────
+
+model Location {
+  id              String         @id @default(uuid())
+  tenantId        String         @map("tenant_id")
+  name            String
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  geofenceRadius  Int?           @map("geofence_radius")
+  status          LocationStatus @default(ACTIVE)
+
+  shifts          Shift[]
+
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("locations")
+}
+
+// ─── Schedule ─────────────────────────────────────────────────────────────
+
+model Schedule {
+  id                  String         @id @default(uuid())
+  tenantId            String         @map("tenant_id")
+  name                String
+  startDate           DateTime       @map("start_date")
+  endDate             DateTime       @map("end_date")
+  status              ScheduleStatus @default(DRAFT)
+  publishedAt         DateTime?      @map("published_at")
+  publishedById       String?        @map("published_by_id")
+  createdById         String         @map("created_by_id")
+  breakRulesSnapshot       Json?          @map("break_rules_snapshot")
+  publishedShiftsSnapshot  Json?          @map("published_shifts_snapshot")
+
+  publishedBy   Employee?      @relation("SchedulePublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  createdBy     Employee       @relation("ScheduleCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  shifts        Shift[]
+  views         ScheduleView[]
+
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, startDate, endDate])
+  @@map("schedules")
+}
+
+// ─── Shift ────────────────────────────────────────────────────────────────
+
+model Shift {
+  id          String    @id @default(uuid())
+  tenantId    String    @map("tenant_id")
+  scheduleId  String?   @map("schedule_id")
+  employeeId  String    @map("employee_id")
+  roleId      String    @map("role_id")
+  locationId  String?   @map("location_id")
+  date        DateTime
+  startTime   DateTime  @map("start_time")
+  endTime     DateTime  @map("end_time")
+  notes       String?
+  isAdHoc     Boolean   @default(false) @map("is_ad_hoc")
+
+  schedule    Schedule?    @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  employee    Employee     @relation("EmployeeShifts", fields: [employeeId], references: [id], onDelete: Cascade)
+  role        Role         @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  location    Location?    @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  clockEvents ClockEvent[] @relation("ShiftClockEvents")
+  timesheetReview TimesheetReview? @relation("ShiftTimesheetReview")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId])
+  @@index([scheduleId])
+  @@index([employeeId])
+  @@index([tenantId, employeeId, date])
+  @@map("shifts")
+}
+
+// ─── ScheduleView (tracking) ──────────────────────────────────────────────
+
+model ScheduleView {
+  id             String    @id @default(uuid())
+  tenantId       String    @map("tenant_id")
+  scheduleId     String    @map("schedule_id")
+  employeeId     String    @map("employee_id")
+  viewedAt       DateTime  @default(now()) @map("viewed_at")
+  reminderSentAt DateTime? @map("reminder_sent_at")
+
+  schedule       Schedule  @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  employee       Employee  @relation("EmployeeScheduleViews", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([scheduleId, employeeId])
+  @@index([tenantId])
+  @@map("schedule_views")
+}
+
+// ─── Availability ─────────────────────────────────────────────────────────
+
+model Availability {
+  id          String    @id @default(uuid())
+  tenantId    String    @map("tenant_id")
+  employeeId  String    @map("employee_id")
+  dayOfWeek   DayOfWeek @map("day_of_week")
+  isAvailable Boolean   @default(true) @map("is_available")
+  startTime   String?   @map("start_time")  // HH:mm format
+  endTime     String?   @map("end_time")    // HH:mm format
+
+  employee    Employee  @relation("EmployeeAvailability", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([employeeId, dayOfWeek])
+  @@index([tenantId])
+  @@index([tenantId, employeeId])
+  @@map("availability")
+}
+
+// ─── ClockEvent ──────────────────────────────────────────────────────────
+
+model ClockEvent {
+  id                String         @id @default(uuid())
+  tenantId          String         @map("tenant_id")
+  shiftId           String         @map("shift_id")
+  employeeId        String         @map("employee_id")
+  type              ClockEventType
+  timestamp         DateTime       @default(now())
+  receivedAt        DateTime?      @map("received_at")
+  latitude          Float?
+  longitude         Float?
+  geofenceVerified  Boolean        @default(false) @map("geofence_verified")
+  method            ClockMethod    @default(GPS)
+  isAdHoc           Boolean        @default(false) @map("is_ad_hoc")
+  notes             String?
+  reason            String?
+  adjustedById      String?        @map("adjusted_by_id")
+  originalEventId   String?        @map("original_event_id")
+
+  shift             Shift          @relation("ShiftClockEvents", fields: [shiftId], references: [id], onDelete: Cascade)
+  employee          Employee       @relation("EmployeeClockEvents", fields: [employeeId], references: [id], onDelete: Cascade)
+  adjustedBy        Employee?      @relation("ClockEventAdjuster", fields: [adjustedById], references: [id], onDelete: SetNull)
+  originalEvent     ClockEvent?    @relation("ClockEventAdjustment", fields: [originalEventId], references: [id], onDelete: SetNull)
+  adjustments       ClockEvent[]   @relation("ClockEventAdjustment")
+
+  createdAt         DateTime       @default(now()) @map("created_at")
+
+  @@index([tenantId])
+  @@index([tenantId, employeeId])
+  @@index([shiftId, type])
+  @@index([originalEventId])
+  @@map("clock_events")
+}
+
+// ─── PreviewToken ──────────────────────────────────────────────────────────
+
+model PreviewToken {
+  id          String    @id @default(uuid())
+  tenantId    String    @map("tenant_id")
+  employeeId  String    @map("employee_id")
+  token       String    @unique
+  expiresAt   DateTime  @map("expires_at")
+  revokedAt   DateTime? @map("revoked_at")
+  accessLog   Json?     @map("access_log")  // Array of { ip, timestamp }
+
+  employee    Employee  @relation("EmployeePreviewTokens", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([tenantId])
+  @@index([token])
+  @@map("preview_tokens")
+}
+
+// ─── TimesheetReview (Story 8.3: flag review tracking) ────────────────────
+
+model TimesheetReview {
+  id           String   @id @default(uuid())
+  tenantId     String   @map("tenant_id")
+  shiftId      String   @unique @map("shift_id")
+  reviewedById String   @map("reviewed_by_id")
+  note         String?
+  reviewedAt   DateTime @default(now()) @map("reviewed_at")
+
+  shift        Shift    @relation("ShiftTimesheetReview", fields: [shiftId], references: [id], onDelete: Cascade)
+  reviewedBy   Employee @relation("TimesheetReviewer", fields: [reviewedById], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([shiftId])
+  @@map("timesheet_reviews")
+}
+
+// ─── LeaveRequest (Epic 9: Leave Management) ─────────────────────────────
+
+model LeaveRequest {
+  id               String             @id @default(uuid())
+  tenantId         String             @map("tenant_id")
+  employeeId       String             @map("employee_id")
+  date             DateTime
+  reason           LeaveReason
+  notes            String?
+  status           LeaveRequestStatus @default(PENDING)
+  hasShiftConflict Boolean            @default(false) @map("has_shift_conflict")
+
+  // Approval fields (Story 9.2)
+  reviewedById     String?            @map("reviewed_by_id")
+  reviewedAt       DateTime?          @map("reviewed_at")
+  rejectionReason  String?            @map("rejection_reason")
+
+  // Nudge tracking (Story 9.6)
+  nudgeSentAt      DateTime?          @map("nudge_sent_at")
+  escalatedAt      DateTime?          @map("escalated_at")
+
+  employee         Employee           @relation("EmployeeLeaveRequests", fields: [employeeId], references: [id], onDelete: Cascade)
+  reviewedBy       Employee?          @relation("LeaveRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  @@index([tenantId])
+  @@index([tenantId, employeeId])
+  @@index([tenantId, status])
+  @@map("leave_requests")
+}

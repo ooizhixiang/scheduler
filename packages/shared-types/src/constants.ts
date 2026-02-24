@@ -1,0 +1,19 @@
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 128;
+
+export const RATE_LIMIT_GLOBAL = 100;
+export const RATE_LIMIT_AUTH = 10;
+export const RATE_LIMIT_WINDOW_SECONDS = 60;
+
+export const PAGINATION_DEFAULT_PAGE = 1;
+export const PAGINATION_DEFAULT_PAGE_SIZE = 20;
+export const PAGINATION_MAX_PAGE_SIZE = 100;
+
+export const ACCESS_TOKEN_EXPIRY = '15m';
+export const REFRESH_TOKEN_EXPIRY = '7d';
+
+export const INVITE_TOKEN_EXPIRY_HOURS = 72;
+export const RESET_TOKEN_EXPIRY_HOURS = 1;
+
+export const SCHEDULE_VIEW_REMINDER_HOURS = 48;
+export const PREVIEW_TOKEN_EXPIRY_DAYS = 30;

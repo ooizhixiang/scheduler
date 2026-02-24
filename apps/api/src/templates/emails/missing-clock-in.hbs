@@ -1,0 +1,13 @@
+<h2>Missing Clock-In Reminder</h2>
+<p>Hi {{firstName}},</p>
+<p>It looks like you haven't clocked in for your shift. If you're at work, please clock in as soon as possible.</p>
+<div class="detail">
+  <strong>Shift:</strong> {{shiftTime}}<br>
+  <strong>Role:</strong> {{roleName}}
+  {{#if locationName}}
+  <br><strong>Location:</strong> {{locationName}}
+  {{/if}}
+</div>
+{{#if link}}
+<p><a href="{{link}}" class="btn">Clock In Now</a></p>
+{{/if}}

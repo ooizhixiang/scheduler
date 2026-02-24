@@ -1,0 +1,14 @@
+<h2>Schedule Updated</h2>
+<p>Hi {{firstName}},</p>
+<p>The schedule for your team has been updated. Please check for changes to your shifts.</p>
+<div class="detail">
+  <strong>Schedule:</strong> {{scheduleName}}<br>
+  <strong>Period:</strong> {{startDate}} – {{endDate}}
+  {{#if changesSummary}}
+  <br><strong>Changes:</strong> {{changesSummary}}
+  {{/if}}
+</div>
+{{#if link}}
+<p><a href="{{link}}" class="btn">View Updated Schedule</a></p>
+{{/if}}
+<p>Please review the changes at your earliest convenience.</p>

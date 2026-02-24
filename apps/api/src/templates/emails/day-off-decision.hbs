@@ -1,0 +1,13 @@
+<h2>Day Off Request {{decision}}</h2>
+<p>Hi {{firstName}},</p>
+<p>Your day off request has been <strong>{{decision}}</strong>.</p>
+<div class="detail">
+  <strong>Date:</strong> {{requestDate}}<br>
+  <strong>Decision by:</strong> {{managerName}}
+  {{#if reason}}
+  <br><strong>Reason:</strong> {{reason}}
+  {{/if}}
+</div>
+{{#if link}}
+<p><a href="{{link}}" class="btn">View Details</a></p>
+{{/if}}
